@@ -1,7 +1,10 @@
 from ExprParser import ExprParser
 from ExprVisitor import ExprVisitor
+from math import floor
 
 class MyExprVisitor(ExprVisitor):
+    std_funcs = {'yap': print}
+    
     def __init__(self):
         super(MyExprVisitor, self).__init__()
         self.stack = []  # Stack to evaluate the expression
@@ -30,10 +33,11 @@ class MyExprVisitor(ExprVisitor):
 
         self.stack.append(c)
         return c
-
-    # Visit a parse tree produced by ExprParser#numberExpr.
-    def visitNumberExpr(self, ctx:ExprParser.NumberExprContext):
-        c = int(str(ctx.INT()))  # Found a number, just insert to stack
+    
+    def visitBandsExpr(self, ctx: ExprParser.BandsExprContext):
+        c = float(str(ctx.BANDS()))
+        if c == floor(c):
+            c = int(c)
         self.stack.append(c)
         return c
 
@@ -41,6 +45,15 @@ class MyExprVisitor(ExprVisitor):
     def visitParensExpr(self, ctx:ExprParser.ParensExprContext):
         return self.visit(ctx.expr())  # Since enclosed by parents, just visit expr
     
-    def visitStringExpr(self, ctx: ExprParser.StringExprContext):
-        string = str(ctx.STRING())
-        return string
+    def visitEssayExpr(self, ctx: ExprParser.EssayExprContext):
+        c = str(ctx.ESSAY()).split("\"")[1]
+        self.stack.append(c)
+        return c
+    
+    def visitFunctionCallExpr(self, ctx: ExprParser.FunctionCallExprContext):
+        func = str(ctx.IDENTIFIER())
+        args = self.visit(ctx.args)
+        if func in MyExprVisitor.std_funcs:
+            MyExprVisitor.std_funcs[func](args)
+        else:
+            print(f'Unidentified token {func}.')

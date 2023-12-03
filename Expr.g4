@@ -4,9 +4,14 @@ prog: expr EOF;
 
 expr: left=expr op=('*'|'/') right=expr   #infixExpr
     | left=expr op=('+'|'-') right=expr   #infixExpr
-    | INT                                 #numberExpr
-    | STRING                              #stringExpr
+    | BANDS                               #bandsExpr
+    | ESSAY                               #essayExpr
     | '(' expr ')'                        #parensExpr
+    | functionName=IDENTIFIER '(' args=exprList ')' #functionCallExpr
+    ;
+
+exprList
+    : expr (',' expr)*
     ;
 
 OP_ADD: '+';
@@ -15,6 +20,7 @@ OP_MUL: '*';
 OP_DIV: '/';
 
 NEWLINE : [\r\n]+ ;
-INT     : [0-9]+ ;
-STRING  : '"' ( ~["\\] | '\\' . )* '"';
+BANDS: [0-9]+ ('.' [0-9]+)?;
+ESSAY  : '"' ( ~["\\] | '\\' . )* '"';
 WS      : [ \t\r\n] -> channel(HIDDEN);
+IDENTIFIER : [a-zA-Z_][a-zA-Z_0-9]* ;

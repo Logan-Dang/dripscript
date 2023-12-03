@@ -18,7 +18,7 @@ def main(argv):
   
   visitor = MyExprVisitor()
   res = visitor.visitProg(tree)
-  print(res)
+  # print(res)
   
 if __name__ == '__main__':
   main(sys.argv)
