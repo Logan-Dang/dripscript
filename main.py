@@ -5,7 +5,13 @@ from ExprLexer import ExprLexer
 from MyExprVisitor import MyExprVisitor
 
 def main(argv):
-  lexer = ExprLexer(InputStream('2 + 3 * 4'))
+  if len(argv) < 2:
+    print('Usage: python main.py <filename>')
+    return
+  
+  with open(argv[1], 'r') as file:
+    input_stream = InputStream(file.read())  
+  lexer = ExprLexer(input_stream)
   stream = CommonTokenStream(lexer)
   parser = ExprParser(stream)
   tree = parser.prog()
