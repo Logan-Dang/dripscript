@@ -10,7 +10,7 @@ class DripVisitor(ExprVisitor):
     
     def __init__(self):
         super(DripVisitor, self).__init__()
-        self.indentifiers = {}   # Dictionary to store variables
+        self.indentifiers: dict[str, DripVariable] = {}   # Dictionary to store variables
             
     def visitArgList(self, ctx: ExprParser.ArgListContext):
         return (self.visit(expr) for expr in ctx.expr())
@@ -41,7 +41,18 @@ class DripVisitor(ExprVisitor):
     
     def visitCurlyBracketExpr(self, ctx: ExprParser.CurlyBracketExprContext):
         return self.visit(ctx.pairs())
-
+    
+    def visitDictRetrievalExpr(self, ctx: ExprParser.DictRetrievalExprContext):
+        d, key = [str(node) for node in ctx.IDENTIFIER()]
+        if d not in self.indentifiers:
+            raise Exception(f'Variable {d} not declared.')
+        var = self.indentifiers[d]
+        if var.type != 'dict':
+            raise Exception(f'Variable {d} is not a dictionary.')
+        if key not in var.value:
+            raise Exception(f'Key {key} not found in dictionary {d}.')
+        return var.value[key]
+    
     def visitEssayExpr(self, ctx: ExprParser.EssayExprContext):
         return str(ctx.ESSAY()).split("\"")[1]
 
@@ -59,6 +70,20 @@ class DripVisitor(ExprVisitor):
             return self.indentifiers[varName].value
         else:
             raise Exception(f'Variable {varName} not declared.')
+    
+    def visitListRetrievalExpr(self, ctx: ExprParser.ListRetrievalExprContext):
+        var_name = str(ctx.IDENTIFIER())
+        if var_name not in self.indentifiers:
+            raise Exception(f'Variable {var_name} not declared.')
+        var = self.indentifiers[var_name]
+        if var.type != 'list':
+            raise Exception(f'Variable {var_name} is not a list.')
+        index = self.visit(ctx.expr())
+        if type(index) != int:
+            raise Exception(f'Index {index} is not an integer.')
+        if index >= len(var.value):
+            raise Exception(f'Index {index} out of range.')
+        return var.value[index]
         
     def visitSquareBracketExpr(self, ctx: ExprParser.SquareBracketExprContext):
         args = self.visit(ctx.argList())

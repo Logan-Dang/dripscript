@@ -12,14 +12,16 @@ variableDeclaration: varType=IDENTIFIER varName=IDENTIFIER '=' expr;
 
 expr: left=expr op=('*'|'/') right=expr   #infixExpr
     | left=expr op=('+'|'-') right=expr   #infixExpr
-    | IDENTIFIER                          #idExpr
-    | BANDS                               #bandsExpr
-    | ESSAY                               #essayExpr
-    | PERCHANCE                           #perchanceExpr
-    | '(' expr ')'                        #parensExpr
-    | '[' argList ']'                     #squareBracketExpr
-    | '{' pairs '}'         #curlyBracketExpr
+    | IDENTIFIER #idExpr
+    | BANDS #bandsExpr
+    | ESSAY #essayExpr
+    | PERCHANCE #perchanceExpr
+    | '(' expr ')' #parensExpr
+    | '[' argList ']' #squareBracketExpr
+    | '{' pairs '}' #curlyBracketExpr
     | functionName=IDENTIFIER '(' args=argList ')' #functionCallExpr
+    | IDENTIFIER '[' expr ']' #listRetrievalExpr
+    | IDENTIFIER '.' IDENTIFIER #dictRetrievalExpr
     ;
 
 argList: expr (',' expr)*;

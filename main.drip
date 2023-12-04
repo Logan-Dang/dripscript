@@ -1,2 +1,2 @@
-list l = [2, 3, 5];
-yap(l);
+dict d = { hello: "world" };
+yap(d.hello);
