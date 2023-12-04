@@ -2,7 +2,7 @@ import sys
 from antlr4 import CommonTokenStream, InputStream
 from ExprParser import ExprParser
 from ExprLexer import ExprLexer
-from MyExprVisitor import MyExprVisitor
+from DripVisitor import DripVisitor
 
 def main(argv):
   if len(argv) < 2:
@@ -16,9 +16,8 @@ def main(argv):
   parser = ExprParser(stream)
   tree = parser.prog()
   
-  visitor = MyExprVisitor()
-  res = visitor.visitProg(tree)
-  # print(res)
+  visitor = DripVisitor()
+  visitor.visitProg(tree)
   
 if __name__ == '__main__':
   main(sys.argv)

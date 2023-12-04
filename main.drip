@@ -1,2 +1,2 @@
-bands ess = 2.3;
-yap(ess, "hi", "hello");
+list l = [2, 3, 5];
+yap(l);

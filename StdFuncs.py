@@ -1,12 +1,12 @@
 from DripVariable import DripVariable
 
 def drip_print(*args):
-  formatted_args = ()
-  for arg in args:
-    if isinstance(arg, DripVariable):
-      formatted_args += (arg.value,)
-    else:
-      formatted_args += (arg,)
-  print(*formatted_args)
+  def boolstr(b):
+    if b == True:
+      return 'onGod'
+    elif b == False:
+      return 'cap'
+    return str(b)
+  print(*(boolstr(arg) for arg in args))
   
 std_funcs = { 'yap': drip_print }
