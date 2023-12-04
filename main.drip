@@ -1,3 +1,2 @@
-yap(2 + 3 * 4, "hi");
-yap("whoa");
-yap("hey hi hello");
+bands ess = 2.3;
+yap(ess, "hi", "hello");

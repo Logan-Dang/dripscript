@@ -1,13 +1,15 @@
 from ExprParser import ExprParser
 from ExprVisitor import ExprVisitor
 from math import floor
+from DripVariable import DripVariable
+import StdFuncs
 
 class MyExprVisitor(ExprVisitor):
-    std_funcs = {'yap': print}
     
     def __init__(self):
         super(MyExprVisitor, self).__init__()
         self.stack = []  # Stack to evaluate the expression
+        self.indentifiers = {}   # Dictionary to store variables
 
     # Visit a parse tree produced by ExprParser#prog.
     def visitProg(self, ctx:ExprParser.ProgContext):
@@ -52,12 +54,36 @@ class MyExprVisitor(ExprVisitor):
     
     def visitFunctionCallExpr(self, ctx: ExprParser.FunctionCallExprContext):
         func = str(ctx.IDENTIFIER())
-        args = self.visit(ctx.exprList())
-        if func in MyExprVisitor.std_funcs:
-            MyExprVisitor.std_funcs[func](*args)
+        args = self.visit(ctx.argList())
+        if func in StdFuncs.std_funcs:
+            StdFuncs.std_funcs[func](*args)
         else:
             print(f'Unidentified token {func}.')
+            
+    def visitArgList(self, ctx: ExprParser.ArgListContext):
+        for exprOrId in ctx.exprOrId():
+            if isinstance(exprOrId, ExprParser.ExprAltContext):
+                yield self.visit(exprOrId)
+            elif isinstance(exprOrId, ExprParser.IdAltContext):
+                yield self.indentifiers[str(exprOrId.IDENTIFIER())]
+            
+    def visitVariableDeclaration(self, ctx: ExprParser.VariableDeclarationContext):
+        varType, varName = [str(node) for node in ctx.IDENTIFIER()]
+        value = self.visit(ctx.expr())
+        if not type_is_valid(value, varType):
+            raise Exception(f'Invalid type for variable {varName}. Expected {varType}, got {drip_type(value)}.')
         
-    def visitExprList(self, ctx: ExprParser.ExprListContext):
-        for expr in ctx.expr():
-            yield self.visit(expr)
+        var = DripVariable(varName, value, varType)
+        self.indentifiers[varName] = var
+        
+def type_is_valid(value, varType):
+    if type(value) == str and varType == 'essay':
+        return True
+    if (type(value) == int or type(value) == float) and varType == 'bands':
+        return True
+    return False
+
+def drip_type(value):
+    if type(value) == str:
+        return 'essay'
+    return type(value)
