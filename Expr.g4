@@ -1,6 +1,10 @@
 grammar Expr;
    
-prog: expr EOF;
+prog: statementList EOF;
+
+statementList: (statement NEWLINE* )+ ;
+
+statement: expr ';';
 
 expr: left=expr op=('*'|'/') right=expr   #infixExpr
     | left=expr op=('+'|'-') right=expr   #infixExpr
@@ -19,7 +23,7 @@ OP_SUB: '-';
 OP_MUL: '*';
 OP_DIV: '/';
 
-NEWLINE : [\r\n]+ ;
+NEWLINE : [\r\n]+ -> skip ;
 BANDS: [0-9]+ ('.' [0-9]+)?;
 ESSAY  : '"' ( ~["\\] | '\\' . )* '"';
 WS      : [ \t\r\n] -> channel(HIDDEN);

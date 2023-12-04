@@ -11,7 +11,7 @@ class MyExprVisitor(ExprVisitor):
 
     # Visit a parse tree produced by ExprParser#prog.
     def visitProg(self, ctx:ExprParser.ProgContext):
-        return self.visit(ctx.expr())  # Just visit the self expression
+        return self.visit(ctx.statementList())
 
     # Visit a parse tree produced by ExprParser#infixExpr.
     def visitInfixExpr(self, ctx:ExprParser.InfixExprContext):
@@ -52,8 +52,12 @@ class MyExprVisitor(ExprVisitor):
     
     def visitFunctionCallExpr(self, ctx: ExprParser.FunctionCallExprContext):
         func = str(ctx.IDENTIFIER())
-        args = self.visit(ctx.args)
+        args = self.visit(ctx.exprList())
         if func in MyExprVisitor.std_funcs:
-            MyExprVisitor.std_funcs[func](args)
+            MyExprVisitor.std_funcs[func](*args)
         else:
             print(f'Unidentified token {func}.')
+        
+    def visitExprList(self, ctx: ExprParser.ExprListContext):
+        for expr in ctx.expr():
+            yield self.visit(expr)

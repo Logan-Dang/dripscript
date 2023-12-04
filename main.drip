@@ -1,1 +1,3 @@
-yap("Hello")
+yap(2 + 3 * 4, "hi");
+yap("whoa");
+yap("hey hi hello");
