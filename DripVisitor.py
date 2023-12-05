@@ -15,24 +15,6 @@ class DripVisitor(ExprVisitor):
     def visitArgList(self, ctx: ExprParser.ArgListContext):
         return (self.visit(expr) for expr in ctx.expr())
 
-    # Visit a parse tree produced by ExprParser#prog.
-    def visitProg(self, ctx:ExprParser.ProgContext):
-        self.visit(ctx.statementList())
-
-    # Visit a parse tree produced by ExprParser#infixExpr.
-    def visitInfixExpr(self, ctx:ExprParser.InfixExprContext):
-        a = self.visit(ctx.left)
-        b = self.visit(ctx.right)
-
-        if ctx.OP_ADD():
-            return a + b
-        elif ctx.OP_SUB():
-            return a - b
-        elif ctx.OP_MUL():
-            return a * b
-        elif ctx.OP_DIV():
-            return a / b
-
     def visitBandsExpr(self, ctx: ExprParser.BandsExprContext):
         num = float(str(ctx.BANDS()))
         if num == floor(num):
@@ -55,6 +37,20 @@ class DripVisitor(ExprVisitor):
     
     def visitEssayExpr(self, ctx: ExprParser.EssayExprContext):
         return str(ctx.ESSAY()).split("\"")[1]
+    
+    def visitFr(self, ctx: ExprParser.FrContext):
+        condition = self.visit(ctx.expr())
+        if type(condition) != bool:
+            raise Exception(f'Condition {condition} is not a boolean.')
+        if not condition:
+            if ctx.fr():
+                self.visit(ctx.fr())
+            if ctx.understandable():
+                self.visit(ctx.understandable())
+            return
+        scoped_visitor = DripVisitor()
+        scoped_visitor.indentifiers = self.indentifiers.copy()
+        scoped_visitor.visit(ctx.statementList())
 
     def visitFunctionCallExpr(self, ctx: ExprParser.FunctionCallExprContext):
         func = str(ctx.IDENTIFIER())
@@ -70,6 +66,30 @@ class DripVisitor(ExprVisitor):
             return self.indentifiers[varName].value
         else:
             raise Exception(f'Variable {varName} not declared.')
+
+    def visitInfixExpr(self, ctx:ExprParser.InfixExprContext):
+        a = self.visit(ctx.left)
+        b = self.visit(ctx.right)
+        if ctx.OP_ADD():
+            return a + b
+        if ctx.OP_SUB():
+            return a - b
+        if ctx.OP_MUL():
+            return a * b
+        if ctx.OP_DIV():
+            return a / b
+        if ctx.OP_POW():
+            return a**b
+        if ctx.OP_GT():
+            return a > b
+        if ctx.OP_LT():
+            return a < b
+        if ctx.OP_GTE():
+            return a >= b
+        if ctx.OP_LTE():
+            return a <= b
+        if ctx.OP_EQ():
+            return a == b
     
     def visitListRetrievalExpr(self, ctx: ExprParser.ListRetrievalExprContext):
         var_name = str(ctx.IDENTIFIER())
@@ -108,6 +128,14 @@ class DripVisitor(ExprVisitor):
         elif perchance == 'cap':
             return False
         raise Exception(f'Unidentified token {perchance}.')
+
+    def visitProg(self, ctx:ExprParser.ProgContext):
+        self.visit(ctx.statementList())
+        
+    def visitUnderstandable(self, ctx: ExprParser.UnderstandableContext):
+        scoped_visitor = DripVisitor()
+        scoped_visitor.indentifiers = self.indentifiers.copy()
+        scoped_visitor.visit(ctx.statementList())        
             
     def visitVariableDeclaration(self, ctx: ExprParser.VariableDeclarationContext):
         varType, varName = [str(node) for node in ctx.IDENTIFIER()]

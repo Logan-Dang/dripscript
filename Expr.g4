@@ -2,16 +2,23 @@ grammar Expr;
    
 prog: statementList EOF;
 
-statementList: (statement NEWLINE* )+ ;
+statementList: (statement NEWLINE* )*;
 
-statement: variableDeclaration ';'
-         | expr ';'
-         ;
+statement
+    : variableDeclaration ';'
+    | fr
+    | expr ';'
+    ;
 
 variableDeclaration: varType=IDENTIFIER varName=IDENTIFIER '=' expr;
+fr: 'fr?' '(' expr ')' '{' NEWLINE* statementList NEWLINE* '}' ('no but' fr)? understandable?;
+understandable: 'understandable' '{' statementList '}';
 
-expr: left=expr op=('*'|'/') right=expr   #infixExpr
+expr
+    : left=expr op='^' right=expr #infixExpr
+    | left=expr op=('*'|'/') right=expr   #infixExpr
     | left=expr op=('+'|'-') right=expr   #infixExpr
+    | left=expr op=('<'|'>'|'=='|'<='|'>=') right=expr #infixExpr
     | IDENTIFIER #idExpr
     | BANDS #bandsExpr
     | ESSAY #essayExpr
@@ -35,6 +42,12 @@ OP_ADD: '+';
 OP_SUB: '-';
 OP_MUL: '*';
 OP_DIV: '/';
+OP_POW: '^';
+OP_EQ: '==';
+OP_LT: '<';
+OP_GT: '>';
+OP_LTE: '<=';
+OP_GTE: '>=';
 
 NEWLINE : [\r\n]+ -> skip ;
 BANDS: [0-9]+ ('.' [0-9]+)?;

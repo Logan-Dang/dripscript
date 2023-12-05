@@ -1,2 +1,9 @@
-dict d = { hello: "world" };
-yap(d.hello);
+fr? (cap) {
+  
+} no but fr? (cap) {
+  
+} no but fr? (cap) {
+  yap(onGod);
+} understandable {
+  yap(cap);
+}
