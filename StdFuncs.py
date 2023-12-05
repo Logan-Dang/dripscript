@@ -1,5 +1,3 @@
-from DripVariable import DripVariable
-
 def drip_print(*args):
   def boolstr(b):
     if type(b) != bool:

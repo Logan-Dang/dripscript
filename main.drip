@@ -1,5 +1,1 @@
-list l = [2, 3, 4];
-for every thing in the l {
-  yap(thing);
-  yap(thing + 1);
-}
+yap("Hello DripScript");

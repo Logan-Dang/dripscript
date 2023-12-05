@@ -1,0 +1,12 @@
+list l = [15, 8, 10, 19, 2];
+bands target = 17;
+
+// problem starts here
+mut dict d = {};
+for every i, num in the l {
+  fr? (target - num in d) {
+    yap(d[target - num], i);
+  } understandable {
+    d = d <- (num, i);
+  }
+}

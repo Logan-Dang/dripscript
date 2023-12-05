@@ -25,25 +25,25 @@ class DripVisitor(ExprVisitor):
     def visitCurlyBracketExpr(self, ctx: ExprParser.CurlyBracketExprContext):
         return self.visit(ctx.pairs())
     
-    def visitDictRetrievalExpr(self, ctx: ExprParser.DictRetrievalExprContext):
-        d, key = [str(node) for node in ctx.IDENTIFIER()]
-        if d not in self.indentifiers:
-            raise Exception(f'Variable {d} not declared.')
-        var = self.indentifiers[d]
-        if var.type != 'dict':
-            raise Exception(f'Variable {d} is not a dictionary.')
-        if key not in var.value:
-            raise Exception(f'Key {key} not found in dictionary {d}.')
-        return var.value[key]
+    def visitDictPutExpr(self, ctx: ExprParser.DictPutExprContext):
+        dictVar = self.visit(ctx.dictVar)
+        key = self.visit(ctx.key)
+        value = self.visit(ctx.value)
+        new_dict = dictVar.copy()
+        new_dict[key] = value
+        return new_dict
     
     def visitEssayExpr(self, ctx: ExprParser.EssayExprContext):
         return str(ctx.ESSAY()).split("\"")[1]
     
     def visitForLoop(self, ctx: ExprParser.ForLoopContext):
+        index: CommonToken = ctx.index
         varName: CommonToken = ctx.varName
         listName: CommonToken = ctx.listName
         if varName.text in self.indentifiers:
             raise Exception(f'Variable {varName.text} already declared.')
+        if index.text in self.indentifiers:
+            raise Exception(f'Variable {index.text} already declared.')
         if listName.text not in self.indentifiers:
             raise Exception(f'Variable {listName.text} not declared.')
         var = self.indentifiers[listName.text]
@@ -53,6 +53,7 @@ class DripVisitor(ExprVisitor):
         scoped_visitor.indentifiers = self.indentifiers.copy()
         for i, value in enumerate(var.value):
             scoped_visitor.indentifiers[varName.text] = DripVariable(varName.text, value, drip_type(value))
+            scoped_visitor.indentifiers[index.text] = DripVariable(index.text, i, 'bands')
             scoped_visitor.visit(ctx.statementList())
     
     def visitFr(self, ctx: ExprParser.FrContext):
@@ -107,20 +108,24 @@ class DripVisitor(ExprVisitor):
             return a <= b
         if ctx.OP_EQ():
             return a == b
+        if ctx.OP_IN():
+            return a in b
     
-    def visitListRetrievalExpr(self, ctx: ExprParser.ListRetrievalExprContext):
-        var_name = str(ctx.IDENTIFIER())
-        if var_name not in self.indentifiers:
-            raise Exception(f'Variable {var_name} not declared.')
-        var = self.indentifiers[var_name]
-        if var.type != 'list':
-            raise Exception(f'Variable {var_name} is not a list.')
-        index = self.visit(ctx.expr())
-        if type(index) != int:
-            raise Exception(f'Index {index} is not an integer.')
-        if index >= len(var.value):
-            raise Exception(f'Index {index} out of range.')
-        return var.value[index]
+    def visitRetrievalExpr(self, ctx: ExprParser.RetrievalExprContext):
+        var = self.visit(ctx.varName)
+        key = self.visit(ctx.key)
+        if type(var) == dict:
+            if key not in var:
+                raise Exception(f'Key {key} not found in dictionary {var}.')
+            return var[key]
+        if type(var) == list:
+            if type(key) != int:
+                raise Exception(f'Index {key} is not an integer.')
+            if key >= len(var):
+                raise Exception(f'Index {key} out of range.')
+            return var[key]
+        raise Exception(f'Variable {var} is not a dictionary or list.')
+            
         
     def visitSquareBracketExpr(self, ctx: ExprParser.SquareBracketExprContext):
         args = self.visit(ctx.argList())
@@ -129,7 +134,6 @@ class DripVisitor(ExprVisitor):
     def visitPairs(self, ctx: ExprParser.PairsContext):
         return { key: value for key, value in (self.visit(pair) for pair in ctx.pair())}
             
-    
     def visitPair(self, ctx: ExprParser.PairContext):
         key = str(ctx.IDENTIFIER())
         value = self.visit(ctx.value)
@@ -160,9 +164,21 @@ class DripVisitor(ExprVisitor):
         if not type_is_valid(value, varType):
             raise Exception(f'Invalid type for variable {varName}. Expected {varType}, got {drip_type(value)}.')
         
-        var = DripVariable(varName, value, varType)
+        var = DripVariable(varName, value, varType, mutable=ctx.mut != None)
         self.indentifiers[varName] = var
         
+    def visitVariableReDec(self, ctx: ExprParser.VariableReDecContext):
+        varName = str(ctx.IDENTIFIER())
+        if varName not in self.indentifiers:
+            raise Exception(f'Variable {varName} not declared.')
+        var = self.indentifiers[varName]
+        if not var.mutable:
+            raise Exception(f'Variable {varName} is not mutable.')
+        value = self.visit(ctx.expr())
+        if not type_is_valid(value, var.type):
+            raise Exception(f'Invalid type for variable {varName}. Expected {var.type}, got {drip_type(value)}.')
+        var.set_value(value)
+    
 def type_is_valid(value, varType):
     if type(value) == str and varType == 'essay':
         return True
@@ -177,6 +193,9 @@ def type_is_valid(value, varType):
     return False
 
 def drip_type(value):
-    if type(value) == str:
+    val_type = type(value)
+    if val_type == str:
         return 'essay'
+    if val_type == int or val_type == float:
+        return 'bands'
     return type(value)
