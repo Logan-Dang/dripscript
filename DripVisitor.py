@@ -4,6 +4,7 @@ import StdFuncs
 from DripVariable import DripVariable
 from ExprParser import ExprParser
 from ExprVisitor import ExprVisitor
+from antlr4.Token import CommonToken
 
 
 class DripVisitor(ExprVisitor):
@@ -37,6 +38,22 @@ class DripVisitor(ExprVisitor):
     
     def visitEssayExpr(self, ctx: ExprParser.EssayExprContext):
         return str(ctx.ESSAY()).split("\"")[1]
+    
+    def visitForLoop(self, ctx: ExprParser.ForLoopContext):
+        varName: CommonToken = ctx.varName
+        listName: CommonToken = ctx.listName
+        if varName.text in self.indentifiers:
+            raise Exception(f'Variable {varName.text} already declared.')
+        if listName.text not in self.indentifiers:
+            raise Exception(f'Variable {listName.text} not declared.')
+        var = self.indentifiers[listName.text]
+        if var.type != 'list':
+            raise Exception(f'Variable {listName.text} is not a list.')
+        scoped_visitor = DripVisitor()
+        scoped_visitor.indentifiers = self.indentifiers.copy()
+        for i, value in enumerate(var.value):
+            scoped_visitor.indentifiers[varName.text] = DripVariable(varName.text, value, drip_type(value))
+            scoped_visitor.visit(ctx.statementList())
     
     def visitFr(self, ctx: ExprParser.FrContext):
         condition = self.visit(ctx.expr())

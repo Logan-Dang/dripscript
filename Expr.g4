@@ -8,11 +8,13 @@ statement
     : variableDeclaration ';'
     | fr
     | expr ';'
+    | forLoop
     ;
 
 variableDeclaration: varType=IDENTIFIER varName=IDENTIFIER '=' expr;
 fr: 'fr?' '(' expr ')' '{' NEWLINE* statementList NEWLINE* '}' ('no but' fr)? understandable?;
 understandable: 'understandable' '{' statementList '}';
+forLoop: 'for every' varName=IDENTIFIER 'in the' listName=IDENTIFIER '{' NEWLINE* statementList NEWLINE* '}';
 
 expr
     : left=expr op='^' right=expr #infixExpr

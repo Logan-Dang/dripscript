@@ -1,9 +1,5 @@
-fr? (cap) {
-  
-} no but fr? (cap) {
-  
-} no but fr? (cap) {
-  yap(onGod);
-} understandable {
-  yap(cap);
+list l = [2, 3, 4];
+for every thing in the l {
+  yap(thing);
+  yap(thing + 1);
 }
